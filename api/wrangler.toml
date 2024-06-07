@@ -1,0 +1,27 @@
+name = "api"
+compatibility_date = "2023-12-01"
+
+
+[vars]
+
+
+GOOGLE_CLIENT_ID=209732031901-75s3gmdas7f3pis5vtng699tvlpu69g1.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_REDIRECT_URI=https://api.hanmadishit74.workers.dev/oauth2callback
+# MY_VAR = "my-variable"
+
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# [[r2_buckets]]
+# binding = "MY_BUCKET"
+# bucket_name = "my-bucket"
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "my-database"
+# database_id = ""
+
+# [ai]
+# binding = "AI"
