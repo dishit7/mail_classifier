@@ -1,6 +1,8 @@
 import { Hono, Context } from 'hono'
 import crypto from 'node:crypto'
 import { Env } from '../env'
+import fetchEmails  from './emails' // Ensure the fetchEmails function is properly exported from its module
+
 const app = new Hono()
 
 interface TokenData {
@@ -14,6 +16,7 @@ interface UserInfo {
   name: string
   picture: string
 }
+
 
 function generateJWT(payload: string, secret: string, expiresIn: string): string {
   const header = { alg: 'HS256', typ: 'JWT' }
@@ -73,6 +76,19 @@ function base64UrlDecode(str: string): string {
   return atob(paddedBase64)  // Use atob instead of Buffer
 }
 
+
+
+function extractAccessTokenFromCookie(cookieHeader) {
+  const cookies = cookieHeader ? cookieHeader.split('; ') : [];
+  for (const cookie of cookies) {
+    const [name, value] = cookie.split('=');
+    if (name === 'custom_auth') {
+      return value;
+    }
+  }
+  return null;
+}
+
 app.get('/oauth2callback', async (c: Context) => {
   console.log('Received /oauth2callback request')
   const code = new URL(c.req.raw.url).searchParams.get('code')
@@ -105,6 +121,7 @@ app.get('/oauth2callback', async (c: Context) => {
         Authorization: `Bearer ${accessToken}`,
       },
     })
+    
     const userInfo = await userInfoResponse.json()
     console.log('User info: ', userInfo)
     const { email, name, picture } = userInfo as UserInfo
@@ -114,7 +131,7 @@ app.get('/oauth2callback', async (c: Context) => {
       status: 302,
       headers: {
         Location: '/',
-        'Set-Cookie': `custom_auth=${cookie}; Path=/; HttpOnly`,
+        'Set-Cookie': `access_token=${accessToken}; Path=/; HttpOnly`,
       },
     })
   } catch (error) {
@@ -133,7 +150,7 @@ app.get('/auth/google', (c: Context) => {
   authorizationUrl.searchParams.set('redirect_uri', Env.GOOGLE_REDIRECT_URI)
   authorizationUrl.searchParams.set('prompt', 'consent')
   authorizationUrl.searchParams.set('response_type', 'code')
-  authorizationUrl.searchParams.set('scope', 'openid email profile')
+  authorizationUrl.searchParams.set('scope', 'openid email profile https://mail.google.com/') // Add the Gmail scope
   authorizationUrl.searchParams.set('access_type', 'offline')
   return new Response(null, {
     status: 302,
@@ -142,6 +159,25 @@ app.get('/auth/google', (c: Context) => {
     },
   })
 })
+app.get('/emails', async (c) => {
+  try {
+    const cookieHeader = c.req.header('cookie');
+   // const accessToken = extractAccessTokenFromCookie(cookieHeader);
+   const accessToken = parseCookie(cookieHeader ?? null, 'access_token');
+   if (!accessToken) {
+      return c.json({ error: 'Access token is required' }, 400);
+    }
+
+    // Fetch emails using the access token (you'll need to implement this function)
+    const emails = await fetchEmails(accessToken);
+    console.log(`emails are ${emails}`)
+    return c.json(emails);
+  } catch (error) {
+    console.log('Error fetching emails:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 
 app.get('/', async (c: Context) => {
   const cookieHeader = c.req.raw.headers.get('Cookie')
@@ -152,5 +188,6 @@ app.get('/', async (c: Context) => {
   }
   return new Response(JSON.stringify({}), { headers: { 'Content-Type': 'application/json' } })
 })
+
 
 export default app
