@@ -2,7 +2,7 @@ import { Hono, Context } from 'hono'
 import crypto from 'node:crypto'
 import { Env } from '../env'
 import fetchEmails  from './emails' // Ensure the fetchEmails function is properly exported from its module
-
+import classifyEmailsWithGemini from  './gem-ai'
 const app = new Hono()
 
 interface TokenData {
@@ -159,6 +159,8 @@ app.get('/auth/google', (c: Context) => {
     },
   })
 })
+
+
 app.get('/emails', async (c) => {
   try {
     const cookieHeader = c.req.header('cookie');
@@ -170,13 +172,29 @@ app.get('/emails', async (c) => {
 
     // Fetch emails using the access token (you'll need to implement this function)
     const emails = await fetchEmails(accessToken);
+    const classifiedEmails= await classifyEmailsWithGemini(emails)
     console.log(`emails are ${emails}`)
-    return c.json(emails);
+    console.log(`emails are ${classifiedEmails}`)
+
+    return c.json(classifiedEmails);
   } catch (error) {
     console.log('Error fetching emails:', error);
     return c.json({ error: error.message }, 500);
   }
 });
+
+app.get('/classifiedEmails',async (c)=>{
+  try {
+
+    const classifiedEmails= await classifyEmailsWithGPT(emails)
+
+
+
+  }catch(err){
+    console.log(err)
+  }
+})
+
 
 
 app.get('/', async (c: Context) => {
