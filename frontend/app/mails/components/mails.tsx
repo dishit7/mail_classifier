@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import MailCard from './MailCard'; // Adjust the import path as necessary
+import SkeletonCard from './Skeleton';
 
 interface Mail {
   subject: string;
@@ -30,6 +31,7 @@ const MailsPage: React.FC = () => {
     if (!accessToken) return;
 
     try {
+      console.log(`currengt page token is ${pageToken}`)
       const response = await axios.get('https://api.hanmadishit74.workers.dev/emails', {
         headers: {
           'Authorization': `Bearer ${accessToken}`
@@ -65,7 +67,19 @@ const MailsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  
+  if (loading) {
+    return (
+      <main className="container mx-auto py-10 px-4 md:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold mb-6">Mail Classification</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <SkeletonCard key={index} />
+          ))}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto py-10 px-4 md:px-6 lg:px-8">
