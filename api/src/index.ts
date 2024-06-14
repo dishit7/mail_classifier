@@ -185,7 +185,6 @@ app.get('/oauth2callback', async (c ) => {
     return new Response('Internal Server Error', { status: 500 }) 
   }
 })
-
 app.get('/emails', async (c) => {
   try {
     // Extract the access token from the Authorization header
@@ -197,14 +196,18 @@ app.get('/emails', async (c) => {
     const accessToken = authorizationHeader.split('Bearer ')[1];
     console.log(`Extracted access token: ${accessToken}`);
     
-    // Fetch emails using the access token (you'll need to implement this function)
-    const emails = await fetchEmails(accessToken);
+    // Extract the pageToken from the query parameters
+    const pageToken = c.req.query('pageToken') || null;
+    
+    // Fetch emails using the access token and page token
+    const { emails, nextPageToken } = await fetchEmails(accessToken, pageToken);
     const classifiedEmails = await classifyEmailsWithGemini(emails);
     
     console.log(`Fetched emails: ${emails}`);
     console.log(`Classified emails: ${classifiedEmails}`);
 
-    return c.json(classifiedEmails);
+    // Return the classified emails and the nextPageToken
+    return c.json({ emails: classifiedEmails, nextPageToken });
   } catch (error) {
     console.log('Error fetching emails:', error);
     return c.json({ error: error.message }, 500);

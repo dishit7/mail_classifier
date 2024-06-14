@@ -12,30 +12,58 @@ interface Mail {
 const MailsPage: React.FC = () => {
   const [mails, setMails] = useState<Mail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  const getAccessToken = async () => {
+    try {
+      const accessTokenRes = await axios.get('https://api.hanmadishit74.workers.dev/getAccessToken', {
+        withCredentials: true
+      });
+      setAccessToken(accessTokenRes.data.accessToken);
+    } catch (error) {
+      console.error('Error fetching access token:', error);
+    }
+  };
+
+  const fetchEmails = async (pageToken: string | null = null) => {
+    if (!accessToken) return;
+
+    try {
+      const response = await axios.get('https://api.hanmadishit74.workers.dev/emails', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        params: {
+          pageToken
+        }
+      });
+      const fetchedMails = response.data.emails;
+      const newNextPageToken = response.data.nextPageToken;
+
+      setMails(prevMails => [...prevMails, ...fetchedMails]);
+      setNextPageToken(newNextPageToken);
+    } catch (error) {
+      console.error('Error fetching emails:', error);
+    }
+  };
 
   useEffect(() => {
-    const getAccessToken = async () => {
-      try {
-        const accessTokenRes = await axios.get('https://api.hanmadishit74.workers.dev/getAccessToken', {
-          withCredentials: true
-        });
-        const accessToken = accessTokenRes.data.accessToken;
-
-        const emailsRes = await axios.get('https://api.hanmadishit74.workers.dev/emails', {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
-        const fetchedMails = emailsRes.data;
-        setMails(fetchedMails);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching emails:', error);
-      }
+    const initialize = async () => {
+      setLoading(true);
+      await getAccessToken();
+      await fetchEmails();
+      setLoading(false);
     };
 
-    getAccessToken();
-  }, []);
+    initialize();
+  }, [accessToken]);
+
+  const loadMoreEmails = () => {
+    if (nextPageToken) {
+      fetchEmails(nextPageToken);
+    }
+  };
 
   if (loading) return <p>Loading...</p>;
 
@@ -47,6 +75,14 @@ const MailsPage: React.FC = () => {
           <MailCard key={index} subject={mail.subject} body={mail.body} category={mail.category} />
         ))}
       </div>
+      {nextPageToken && (
+        <button
+          onClick={loadMoreEmails}
+          className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+        >
+          Load More
+        </button>
+      )}
     </main>
   );
 };

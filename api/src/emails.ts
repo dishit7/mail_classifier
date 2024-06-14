@@ -26,62 +26,62 @@ interface GmailMessageDetail {
 }
 
 // Function to fetch emails from Gmail API
-async function fetchEmails(accessToken: string, maxResults: number = 10): Promise<{ subject: string, body: string }[]> {
-    console.log(`AccessToken is ${accessToken}`);
-    const response = await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}`, {
+async function fetchEmails(accessToken: string, pageToken: string | null = null, maxResults: number = 6): Promise<{ emails: { subject: string, body: string }[], nextPageToken: string | null }> {
+    let url = `https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}`;
+    if (pageToken) {
+        url += `&pageToken=${pageToken}`;
+    }
+
+    const response = await fetch(url, {
         headers: {
             'Authorization': `Bearer ${accessToken}`
         }
     });
+
     const data = await response.json() as GmailMessagesResponse;
-    console.log('Data is', JSON.stringify(data));
-
-    if (data.messages) {
-        const emails = await Promise.all(
-            data.messages.map(async (msg: GmailMessage) => {
-                const msgResponse = await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-                const messageDetail = await msgResponse.json() as GmailMessageDetail;
-
-                const subjectHeader = messageDetail.payload.headers.find(header => header.name === 'Subject');
-                const subject = subjectHeader ? subjectHeader.value : '(No subject)';
-
-                const body = extractBody(messageDetail.payload);
-
-                // Remove weird symbols and non-printable characters
-                const cleanBody = removeWeirdSymbols(body);
-
-                // Convert HTML body to plain text
-                const plainTextBody = htmlToText(cleanBody, {
-                    wordwrap: 130,
-                    baseElements: { selectors: ['body'] },
-                    selectors: [
-                        { selector: 'a', options: { ignoreHref: true } },
-                        { selector: 'img', format: 'skip' },
-                        { selector: 'div', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } },
-                        { selector: 'p', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } }
-                    ],
-                    limits: {
-                        ellipsis: '...',
-                        maxInputLength: 1000
-                    },
-                    longWordSplit: { wrapCharacters: ['/', '_', '-'], forceWrapOnLimit: true },
-                    preserveNewlines: true
-                });
-
-                // Make links clickable
-                const clickableBody = makeLinksClickable(plainTextBody);
-
-                return { subject, body: clickableBody };
-            })
-        );
-        return emails;
-    } else {
+    if (!data.messages) {
         throw new Error('No messages found');
     }
+
+    const emails = await Promise.all(
+        data.messages.map(async (msg: GmailMessage) => {
+            const msgResponse = await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            const messageDetail = await msgResponse.json() as GmailMessageDetail;
+
+            const subjectHeader = messageDetail.payload.headers.find(header => header.name === 'Subject');
+            const subject = subjectHeader ? subjectHeader.value : '(No subject)';
+
+            const body = extractBody(messageDetail.payload);
+
+            const cleanBody = removeWeirdSymbols(body);
+            const plainTextBody = htmlToText(cleanBody, {
+                wordwrap: 130,
+                baseElements: { selectors: ['body'] },
+                selectors: [
+                    { selector: 'a', options: { ignoreHref: true } },
+                    { selector: 'img', format: 'skip' },
+                    { selector: 'div', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } },
+                    { selector: 'p', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } }
+                ],
+                limits: {
+                    ellipsis: '...',
+                    maxInputLength: 1000
+                },
+                longWordSplit: { wrapCharacters: ['/', '_', '-'], forceWrapOnLimit: true },
+                preserveNewlines: true
+            });
+
+            const clickableBody = makeLinksClickable(plainTextBody);
+
+            return { subject, body: clickableBody };
+        })
+    );
+
+    return { emails, nextPageToken: data.nextPageToken || null };
 }
 
 // Function to extract email body based on MIME type
