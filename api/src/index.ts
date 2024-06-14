@@ -222,6 +222,11 @@ app.get('/getAccessToken', async (c) => {
   return c.json({ accessToken: send_acessToken });
 });
 
+app.get("/logout",async(c)=>{
+  await c.env.accessstoken.put("access_token","")
+  return c.json({message:"Logged out successfully"})
+})
+
 app.get('/classifiedEmails',async (c)=>{
   try {
 

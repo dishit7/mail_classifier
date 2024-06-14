@@ -8,7 +8,7 @@ interface Mails{
 const page = async () => { 
   return (
     <div>
-     <div>Mails</div> 
+      
      <MailsPage />
       
     </div>
