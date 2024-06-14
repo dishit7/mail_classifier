@@ -182,9 +182,10 @@ app.get('/oauth2callback', async (c ) => {
     console.log('Error during OAuth callback')
     console.log(error)
     console.error('Error fetching user info:', error)
-    return new Response('Internal Server Error', { status: 500 })
+    return new Response('Internal Server Error', { status: 500 }) 
   }
 })
+
 app.get('/emails', async (c) => {
   try {
     // Extract the access token from the Authorization header

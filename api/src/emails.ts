@@ -3,17 +3,17 @@ import { htmlToText } from 'html-to-text';
 interface GmailMessage {
     id: string;
     threadId: string;
-  }
-  
-  // Define the interface for the response when listing Gmail messages
-  interface GmailMessagesResponse {
+}
+
+// Define the interface for the response when listing Gmail messages
+interface GmailMessagesResponse {
     messages: GmailMessage[];
     nextPageToken?: string;
     resultSizeEstimate: number;
-  }
-  
-  // Define the interface for the detailed Gmail message data
-  interface GmailMessageDetail {
+}
+
+// Define the interface for the detailed Gmail message data
+interface GmailMessageDetail {
     id: string;
     threadId: string;
     labelIds: string[];
@@ -23,10 +23,10 @@ interface GmailMessage {
     payload: any;
     sizeEstimate: number;
     raw: string;
-  }
+}
 
-  
-async function fetchEmails(accessToken: string, maxResults: number = 3): Promise<{ subject: string, body: string }[]> {
+// Function to fetch emails from Gmail API
+async function fetchEmails(accessToken: string, maxResults: number = 10): Promise<{ subject: string, body: string }[]> {
     console.log(`AccessToken is ${accessToken}`);
     const response = await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}`, {
         headers: {
@@ -51,8 +51,11 @@ async function fetchEmails(accessToken: string, maxResults: number = 3): Promise
 
                 const body = extractBody(messageDetail.payload);
 
+                // Remove weird symbols and non-printable characters
+                const cleanBody = removeWeirdSymbols(body);
+
                 // Convert HTML body to plain text
-                const cleanBody = htmlToText(body, {
+                const plainTextBody = htmlToText(cleanBody, {
                     wordwrap: 130,
                     baseElements: { selectors: ['body'] },
                     selectors: [
@@ -63,13 +66,16 @@ async function fetchEmails(accessToken: string, maxResults: number = 3): Promise
                     ],
                     limits: {
                         ellipsis: '...',
-                        maxInputLength: 10000
+                        maxInputLength: 1000
                     },
                     longWordSplit: { wrapCharacters: ['/', '_', '-'], forceWrapOnLimit: true },
                     preserveNewlines: true
                 });
 
-                return { subject, body: cleanBody };
+                // Make links clickable
+                const clickableBody = makeLinksClickable(plainTextBody);
+
+                return { subject, body: clickableBody };
             })
         );
         return emails;
@@ -78,6 +84,7 @@ async function fetchEmails(accessToken: string, maxResults: number = 3): Promise
     }
 }
 
+// Function to extract email body based on MIME type
 function extractBody(payload: any): string {
     let body = '';
 
@@ -100,5 +107,28 @@ function extractBody(payload: any): string {
     return body;
 }
 
+// Function to make URLs clickable
+function makeLinksClickable(body: string): string {
+    // Regular expression to match URLs
+    const urlRegex = /https?:\/\/[^\s]+/g;
 
-export default fetchEmails
+    // Replace URLs with anchor tags
+    const formattedBody = body.replace(urlRegex, (url) => {
+        return `<a href="${url}" target="_blank">${url}</a>`;
+    });
+
+    return formattedBody;
+}
+
+// Function to remove weird symbols and non-printable characters
+function removeWeirdSymbols(input: string): string {
+    // Define a regex pattern to match non-printable ASCII characters and weird symbols
+    const regex = /[^\x20-\x7E]/g;
+
+    // Replace matched characters with an empty string
+    const cleaned = input.replace(regex, '');
+
+    return cleaned;
+}
+
+export default fetchEmails;

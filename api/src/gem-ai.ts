@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { GoogleGenerativeAI } from "@google/generative-ai";
 const gem_api = "AIzaSyCQNW2RNfF8nGFfxXOGKXUk0VtREINOnto"; // Replace with your actual API key
 const genAI = new GoogleGenerativeAI(gem_api);
 
