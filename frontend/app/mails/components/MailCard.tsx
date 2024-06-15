@@ -16,14 +16,16 @@ const MailCard: React.FC<MailCardProps> = ({ subject, body, category }) => {
 
   const { categoryClass, categoryBgClass } = getCategoryClasses(category);
   const displayBody = () => {
-    console.log(`body after trim is ${body.trim()}`)
-    if (body.trim() === "") {
+    if (!body || typeof body !== 'string') {
+      return customMessage;
+    }
+    const trimmedBody = body.trim();
+    if (trimmedBody === "") {
       return customMessage;
     }
     return showFullBody ? body : `${body.substring(0, 100)}...`;
   };
-
- 
+  
 return (
   <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg overflow-hidden">
     <div className={`bg-gray-100 dark:bg-gray-800 px-4 py-2 text-center ${categoryBgClass}`}>
@@ -54,15 +56,14 @@ return (
 const getCategoryClasses = (category: string) => {
   let categoryClass = '';
   let categoryBgClass = '';
-debugger ;
-  switch (category) {
+   switch (category) {
     case 'Important':
       categoryClass = 'text-green-800  ';
       categoryBgClass = 'bg-green-100 dark:bg-red-700				';
       break;
     case 'Promotional':
       categoryClass = 'text-blue-800  ';
-      categoryBgClass = 'bg-blue-100 dark:bg-blue-600';
+      categoryBgClass = 'bg-blue-100 dark:bg-blue-500';
       break;
     case 'Social':
       categoryClass = 'text-yellow-800  ';

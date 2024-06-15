@@ -1,7 +1,7 @@
 import { Hono, Context } from 'hono'
 import crypto from 'node:crypto'
 import { Env_Vars} from '../env'
-import fetchEmails  from './emails' // Ensure the fetchEmails function is properly exported from its module
+import fetchEmails  from './emails' 
 import classifyEmailsWithGemini from  './gem-ai'
 import { cors } from 'hono/cors'
  
@@ -20,10 +20,10 @@ app.get('/', (c) => {
 })
 
 app.use('*', cors({
-  origin: ['http://localhost:8080', 'https://api.hanmadishit74.workers.dev'], // Allow requests from both http://localhost:8080 and the origin itself
-  allowHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-  allowMethods: ['GET', 'POST', 'OPTIONS'], // Specify allowed HTTP methods
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  origin: ['https://mail-classifier2.vercel.app','http://localhost:8080', 'https://api.hanmadishit74.workers.dev'], // Allow requests from both http://localhost:8080 and the origin itself
+  allowHeaders: ['Content-Type', 'Authorization'],  
+  allowMethods: ['GET', 'POST', 'OPTIONS'],  
+  credentials: true, 
 }));
 
 
@@ -174,7 +174,7 @@ app.get('/oauth2callback', async (c ) => {
      return new Response(null, {
       status: 302,
       headers: {
-        Location: 'http://localhost:8080/mails',
+        Location: `${Env_Vars.API}mails`,
         'Set-Cookie': `access_token=${accessToken}; Path=/; HttpOnly`,
       },
     })
@@ -187,8 +187,7 @@ app.get('/oauth2callback', async (c ) => {
 })
 app.get('/emails', async (c) => {
   try {
-    // Extract the access token from the Authorization header
-    const authorizationHeader = c.req.header('Authorization');
+     const authorizationHeader = c.req.header('Authorization');
     if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
       return c.json({ error: 'Access token is required' }, 400);
     }
@@ -196,18 +195,15 @@ app.get('/emails', async (c) => {
     const accessToken = authorizationHeader.split('Bearer ')[1];
     console.log(`Extracted access token: ${accessToken}`);
     
-    // Extract the pageToken from the query parameters
-    const pageToken = c.req.query('pageToken') || null;
+     const pageToken = c.req.query('pageToken') || null;
     
-    // Fetch emails using the access token and page token
-    const { emails, nextPageToken } = await fetchEmails(accessToken, pageToken);
+     const { emails, nextPageToken } = await fetchEmails(accessToken, pageToken);
     const classifiedEmails = await classifyEmailsWithGemini(emails);
     
     console.log(`Fetched emails: ${emails}`);
     console.log(`Classified emails: ${classifiedEmails}`);
 
-    // Return the classified emails and the nextPageToken
-    return c.json({ emails: classifiedEmails, nextPageToken });
+     return c.json({ emails: classifiedEmails, nextPageToken });
   } catch (error) {
     console.log('Error fetching emails:', error);
     return c.json({ error: error.message }, 500);

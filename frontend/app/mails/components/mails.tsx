@@ -3,10 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import MailCard from './MailCard'; // Adjust the import path as necessary
 import SkeletonCard from './Skeleton';
-import {useNavigate} from 'react-router-dom'
-import router, { useRouter } from 'next/router'; // Assuming you're using Next.js
-
- 
+    
 interface Mail {
   subject: string;
   body: string;
@@ -20,7 +17,7 @@ const MailsPage: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
    const getAccessToken = async () => {
-    try {
+    try {   
       const accessTokenRes = await axios.get('https://api.hanmadishit74.workers.dev/getAccessToken', {
         withCredentials: true
       });
@@ -45,11 +42,13 @@ const MailsPage: React.FC = () => {
         }
       });
       const fetchedMails = response.data.emails;
+      console.log(`fetched emails are ${fetchedMails}`)
       const newNextPageToken = response.data.nextPageToken;
-
       setMails(prevMails => [...prevMails, ...fetchedMails]);
       setNextPageToken(newNextPageToken);
+      console.log(`next page token is ${newNextPageToken}`)
     } catch (error) {
+
       console.error('Error fetching emails:', error);
       setError('Failed to fetch emails. Please refresh the page or try again later.');
     }
@@ -82,7 +81,7 @@ const MailsPage: React.FC = () => {
   const handleLogout = async () => {
     try {
       await axios.get('https://api.hanmadishit74.workers.dev/logout');
-      router.push('/login');
+      window.location.href='/';
     } catch (error) {
       console.error('Error during logout:', error);
       alert('Logout failed. Please try again.');

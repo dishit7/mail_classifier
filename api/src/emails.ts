@@ -5,15 +5,13 @@ interface GmailMessage {
     threadId: string;
 }
 
-// Define the interface for the response when listing Gmail messages
-interface GmailMessagesResponse {
+ interface GmailMessagesResponse {
     messages: GmailMessage[];
     nextPageToken?: string;
     resultSizeEstimate: number;
 }
 
-// Define the interface for the detailed Gmail message data
-interface GmailMessageDetail {
+ interface GmailMessageDetail {
     id: string;
     threadId: string;
     labelIds: string[];
@@ -25,8 +23,8 @@ interface GmailMessageDetail {
     raw: string;
 }
 
-// Function to fetch emails from Gmail API
-async function fetchEmails(accessToken: string, pageToken: string | null = null, maxResults: number = 6): Promise<{ emails: { subject: string, body: string }[], nextPageToken: string | null }> {
+ async function fetchEmails(accessToken: string, pageToken: string | null = null, maxResults: number = 4): Promise<{ emails: { subject: string, body: string }[], nextPageToken: string | null }> {
+   try{
     let url = `https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}`;
     if (pageToken) {
         url += `&pageToken=${pageToken}`;
@@ -62,7 +60,7 @@ async function fetchEmails(accessToken: string, pageToken: string | null = null,
                 wordwrap: 130,
                 baseElements: { selectors: ['body'] },
                 selectors: [
-                    { selector: 'a', options: { ignoreHref: true } },
+              
                     { selector: 'img', format: 'skip' },
                     { selector: 'div', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } },
                     { selector: 'p', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } }
@@ -75,13 +73,16 @@ async function fetchEmails(accessToken: string, pageToken: string | null = null,
                 preserveNewlines: true
             });
 
-            const clickableBody = makeLinksClickable(plainTextBody);
+          //  const clickableBody = makeLinksClickable(plainTextBody);
 
-            return { subject, body: clickableBody };
+            return { subject, body: plainTextBody };
         })
     );
 
     return { emails, nextPageToken: data.nextPageToken || null };
+   }catch(err){
+    console.log(err)
+   }
 }
 
 // Function to extract email body based on MIME type
@@ -106,7 +107,7 @@ function extractBody(payload: any): string {
 
     return body;
 }
-
+/*
 // Function to make URLs clickable
 function makeLinksClickable(body: string): string {
     // Regular expression to match URLs
@@ -118,7 +119,7 @@ function makeLinksClickable(body: string): string {
     });
 
     return formattedBody;
-}
+}*/
 
 // Function to remove weird symbols and non-printable characters
 function removeWeirdSymbols(input: string): string {

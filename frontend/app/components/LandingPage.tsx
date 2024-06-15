@@ -5,9 +5,10 @@
  */
 import Link from "next/link"
 import { JSX, SVGProps } from "react"
+
 export default function Component() {
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center">
         <Link href="#" className="flex items-center justify-center" prefetch={false}>
           <MailIcon className="h-6 w-6" />
@@ -36,8 +37,8 @@ export default function Component() {
                 </p>
                 <div className="mt-6">
                   <Link
-                   href="https://api.hanmadishit74.workers.dev/auth/google"
-                   className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                    href="https://api.hanmadishit74.workers.dev/auth/google"
+                    className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
                     prefetch={false}
                   >
                     Login with Google
@@ -45,7 +46,7 @@ export default function Component() {
                 </div>
               </div>
               <img
-                src="/placeholder.svg"
+                src="/email-svgrepo-com.svg"
                 width="550"
                 height="310"
                 alt="Mail Classifier"
